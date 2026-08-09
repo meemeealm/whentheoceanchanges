@@ -1,0 +1,6 @@
+{
+  "name": "When the Ocean Changes",
+  "description": "An editorial climate data storytelling experience exploring ocean change, cyclone exposure, and human impact.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

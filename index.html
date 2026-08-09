@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>When the Ocean Changes — Climate Data Story</title>
+    <meta
+      name="description"
+      content="An interactive climate data story exploring environmental change, cyclone exposure, and human and economic impacts across island communities."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <!-- Top Progress Line -->
+    <div class="progress-bar" id="reading-progress-bar" aria-hidden="true"></div>
+
+    <!-- Floating Reading Indicator -->
+    <div class="reading-indicator" id="reading-indicator" aria-label="Reading section indicator">
+      <span class="reading-label">Part</span>
+      <span class="reading-part" id="current-part">01</span>
+      <span class="reading-divider">/</span>
+      <span class="reading-total">03</span>
+    </div>
+
+    <!-- HERO SECTION -->
+    <header class="hero-section">
+      <div class="content-wrapper hero-wrapper reveal-element">
+        <div class="hero-meta-badge">
+          <span class="meta-dot"></span>
+          <span>Interactive climate data story</span>
+        </div>
+        <h1 class="hero-title">
+          When the Ocean Changes,<br />
+          Who Bears the Cost?
+        </h1>
+        <p class="hero-subtitle">
+          Exploring environmental change, cyclone exposure, and human and economic impacts across island communities.
+        </p>
+        <div class="scroll-prompt" aria-hidden="true">
+          <span class="scroll-text">Scroll to explore</span>
+          <span class="scroll-line"></span>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <!-- SECTION 01 — THE ENVIRONMENT -->
+      <section class="story-section" id="section-01" aria-labelledby="heading-01">
+        <div class="content-wrapper reveal-element">
+          <div class="section-header">
+            <span class="section-label">01 — PACIFIC IS CHANGING</span>
+            <h2 id="heading-01" class="section-title">
+              Thermal expansion and shifting sea surface patterns set the baseline for Pacific island vulnerability.
+            </h2>
+          </div>
+          <div class="text-body">
+            <p>
+              Ocean waters absorb over 90% of the excess heat trapped in the Earth system. Across the Pacific basin, gradual increases in sea surface temperature and upper-ocean heat content alter local marine dynamics and atmosphere-ocean energy exchanges.
+            </p>
+            <p>
+              Understanding this evolving thermal baseline provides essential context for analyzing storm frequency, track shifts, and long-term ecosystem exposure.
+            </p>
+          </div>
+        </div>
+
+        <div class="viz-wrapper reveal-element">
+          <div
+            class="viz-container"
+            id="trend-chart"
+            aria-label="Environmental trend visualization"
+          ></div>
+          <div class="viz-caption-container">
+            <p class="viz-caption">Fig 1.1 — Ocean thermal indicators and surface anomaly distributions across the Pacific basin.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- NARRATIVE PAUSE 01 -->
+      <div class="narrative-pause reveal-element" aria-label="Narrative transition">
+        <div class="pause-wrapper">
+          <p class="pause-quote">
+            A changing environment is only part of the story.
+          </p>
+          <p class="pause-subtext">
+            Cyclones occur within this environmental backdrop — but exposure is not distributed evenly across populations.
+          </p>
+        </div>
+      </div>
+
+      <!-- SECTION 02 — THE HAZARD -->
+      <section class="story-section" id="section-02" aria-labelledby="heading-02">
+        <div class="content-wrapper reveal-element">
+          <div class="section-header">
+            <span class="section-label">02 — THE HAZARD</span>
+            <h2 id="heading-02" class="section-title">
+              Trajectory, intensity, and frequency: mapping cyclone pathways across the basin.
+            </h2>
+          </div>
+          <div class="text-body">
+            <p>
+              Tropical cyclones are complex atmospheric phenomena fueled by ocean heat, atmospheric pressure gradients, and regional wind shear. While ocean energy enables storm development, historical pathways demonstrate pronounced geographic clustering.
+            </p>
+            <p>
+              Tracking historical storm paths over time reveals distinct zones of recurring hazard, where specific island territories encounter severe storm conditions with elevated statistical regularity.
+            </p>
+          </div>
+        </div>
+
+        <div class="viz-wrapper reveal-element">
+          <div
+            class="viz-container"
+            id="cyclone-chart"
+            aria-label="Cyclone exposure visualization"
+          ></div>
+          <div class="viz-caption-container">
+            <p class="viz-caption">Fig 2 — Cyclones, and density distribution across Pacific island territories.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- NARRATIVE PAUSE 02 -->
+      <div class="narrative-pause pause-impact reveal-element" aria-label="Narrative transition to human impact">
+        <div class="pause-wrapper">
+          <p class="pause-quote">
+            But frequency is only part of the story.
+          </p>
+          <p class="pause-subtext">
+            The true measure of a storm’s severity lies in where its path intersects human settlement, infrastructure, and local economic resilience <span class="coral-accent-dot" aria-hidden="true">•</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- SECTION 03 — THE IMPACTS -->
+      <section class="story-section section-impact" id="section-03" aria-labelledby="heading-03">
+        <div class="content-wrapper reveal-element">
+          <div class="section-header">
+            <span class="section-label label-coral">03 — THE IMPACTS</span>
+            <h2 id="heading-03" class="section-title">
+              Disproportionate losses: how geographic exposure translates into human and economic cost.
+            </h2>
+          </div>
+          <div class="text-body">
+            <p>
+              When a cyclone impacts an island territory, losses extend far beyond immediate physical damage. Geographic isolation, coastal infrastructure concentration, and limited capital reserves compound the social and economic disruption.
+            </p>
+            <p>
+              Comparing physical hazard metrics against socioeconomic vulnerability reveals a clear inequality: communities experiencing the highest relative economic losses often possess the smallest resource buffers to recover before the next event.
+            </p>
+          </div>
+        </div>
+
+        <div class="viz-wrapper reveal-element">
+          <div
+            class="viz-container"
+            id="impact-chart"
+            aria-label="Human and economic impact visualization"
+          ></div>
+          <div class="viz-caption-container">
+            <p class="viz-caption">Fig 3.1 — Population displacement, structural damage, and relative GDP impact across affected island communities.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- FINAL SYNTHESIS -->
+      <section class="synthesis-section reveal-element" aria-labelledby="synthesis-heading">
+        <div class="content-wrapper">
+          <div class="final-takeaway">
+            <p class="takeaway-label">THE TAKEAWAY</p>
+            <h2 id="final-takeaway">
+              [Evidence-based finding will be inserted here.]
+            </h2>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- DATA & METHODS FOOTER -->
+    <footer class="site-footer" role="contentinfo">
+      <div class="footer-container">
+        <div class="footer-grid">
+          <div class="footer-col">
+            <h3 class="footer-heading">Data Sources</h3>
+            <ul class="footer-list">
+              <li>NOAA Cyclone Track Data</li>
+              <li>Environmental Datasets</li>
+              <li>Population &amp; Impact Metrics</li>
+              <li>Economic Loss Data</li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h3 class="footer-heading">Methodology &amp; Integrity</h3>
+            <p class="footer-text">
+              The analysis is descriptive and data-driven. Observed environmental trends, cyclone frequencies, and human and economic impacts are presented within the limits of the available data, without implying causal relationships that the analysis cannot establish.
+            </p>
+          </div>
+          <div class="footer-col">
+            <h3 class="footer-heading">Publication</h3>
+            <p class="footer-text">
+              Designed as a minimalist, competition-grade data journalism shell. Visualization modules injected via Plotly.js engine.
+            </p>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p class="copyright">
+            Interactive Climate Data Storytelling &bull; Open Research &amp; Data Journalism Shell
+          </p>
+          <div class="footer-palette-dots" aria-hidden="true">
+            <span class="palette-dot dot-ocean"></span>
+            <span class="palette-dot dot-water"></span>
+            <span class="palette-dot dot-coral"></span>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="./script.js" defer></script>
+  </body>
+</html>
+
+
