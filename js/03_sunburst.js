@@ -373,6 +373,7 @@ async function createSunburst() {
 
                     thickness: 12,
                     len: 0.55,
+                    x: 0.83,
                     outlinewidth: 0,
 
                     tickfont: {
@@ -425,6 +426,7 @@ async function createSunburst() {
 
                 text:
                     `<b>Storms Meet the Islands in the Last 20 Years</b>` +
+                    `<br><sup style="display:inline-block; margin-top:6px;">` +
                     `<br><sup>Cyclone activity, ${firstYear}–${latestYear}</sup>`,
 
                 x: 0.05,
@@ -477,7 +479,7 @@ async function createSunburst() {
                 {
                     x: 0.5,
 
-                    y: -0.085,
+                    y: -0.12,
 
                     xref: "paper",
 
