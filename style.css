@@ -269,7 +269,8 @@ body {
 
 .viz-container {
   width: 100%;
-  min-height: 600px;
+  height: 600px;
+  min-height: 500px;
   background: #FAFAFA;
   border: 1px dashed var(--blue-soft);
   position: relative;
