@@ -228,7 +228,7 @@ async function createBubbleChart() {
                 "%{customdata[2]:,.0f}<br>" +
 
                 "Economic loss: " +
-                "%{customdata[3]:,.0f}" +
+                "$%{customdata[3]:,.0f}" +
 
                 "<extra></extra>",
 
