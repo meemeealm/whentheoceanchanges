@@ -24,6 +24,8 @@ async function loadBubbleData() {
 }
 
 
+
+
 /* =========================================================
    CREATE CHART
    ========================================================= */
@@ -243,6 +245,8 @@ async function createBubbleChart() {
 
         const layout = {
 
+            autosize: true,
+
             template: "plotly_white",
 
             height: 500,
@@ -457,7 +461,7 @@ async function createBubbleChart() {
 
             margin: {
 
-                l: 110,
+                l: 100,
 
                 r: 40,
 
@@ -497,17 +501,28 @@ async function createBubbleChart() {
            ================================================= */
 
         await Plotly.newPlot(
-
             CHART_ID,
-
             [trace],
-
             layout,
-
             config
         );
 
+        const chart = document.getElementById(CHART_ID);
 
+        chart.style.width = "85%";
+
+        chart.style.marginLeft = "auto";
+
+        chart.style.marginRight = "auto";
+
+        Plotly.Plots.resize(chart);
+
+
+        /* =================================================
+           CENTER CHART CANVAS
+           ================================================= */
+
+        
     } catch (error) {
 
         console.error(
