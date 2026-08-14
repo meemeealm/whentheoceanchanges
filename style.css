@@ -268,7 +268,10 @@ body {
 }
 
 .viz-container {
-  width: 100%;
+  width: 90%;
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
   height: 600px;
   min-height: 500px;
   background: #FAFAFA;
@@ -587,11 +590,13 @@ body {
     transition: none !important;
   }
 }
-
+/*
 .story-section .viz-wrapper {
   width: 75% !important;
   max-width: 1000px !important;
   margin-left: auto !important;
   margin-right: auto !important;
 }
+
+*/
 
