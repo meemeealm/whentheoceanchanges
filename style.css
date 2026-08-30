@@ -272,8 +272,8 @@ body {
   max-width: 90%;
   margin-left: auto;
   margin-right: auto;
-  height: 600px;
-  min-height: 500px;
+  height: auto;
+  min-height: 400px;
   background: #FAFAFA;
   border: 1px dashed var(--blue-soft);
   position: relative;
@@ -519,7 +519,7 @@ body {
   }
 
   .viz-container {
-    min-height: 520px;
+    min-height: 420px;
   }
 
   .footer-grid {
@@ -669,3 +669,4 @@ body {
 .explanation-output:empty {
     display: none;
 }
+

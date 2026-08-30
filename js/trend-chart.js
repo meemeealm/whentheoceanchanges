@@ -659,6 +659,10 @@ async function createEnvironmentalChart() {
 
                 xanchor: "left",
 
+                y: 0.92,
+
+                yanchor: "top",
+
                 font: {
 
                     size: 22,
@@ -687,7 +691,7 @@ async function createEnvironmentalChart() {
 
                     xanchor: "right",
 
-                    y: 1.12,
+                    y: 1.16,
 
                     yanchor: "top",
 
@@ -751,7 +755,7 @@ async function createEnvironmentalChart() {
 
             yaxis: {
 
-                domain: [0.55, 1],
+                domain: [0.57, 1],
 
                 title: {
 
@@ -786,7 +790,7 @@ async function createEnvironmentalChart() {
 
             yaxis2: {
 
-                domain: [0, 0.45],
+                domain: [0, 0.38],
 
                 title: {
 
@@ -898,18 +902,18 @@ async function createEnvironmentalChart() {
                Size
                --------------------------------------------- */
 
-            height: 500,
+            height: 450,
 
 
             margin: {
 
-                l: 80,
+                l: 60,
 
-                r: 40,
+                r: 30,
 
-                t: 150,
+                t: 90,
 
-                b: 60
+                b: 35
             },
 
 
