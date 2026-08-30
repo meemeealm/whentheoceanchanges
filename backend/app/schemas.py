@@ -87,8 +87,21 @@ class ChartContext(BaseModel):
         return self
 
 
-class ExplanationResponse(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+from pydantic import BaseModel, Field
 
-    explanation: str
-    takeaway: str
+class ExplanationResponse(BaseModel):
+    explanation: str = Field(
+        ...,
+        max_length=300,
+        description=(
+            "A concise narrative tailored to the requested audience. "
+            "Focus strictly on key findings/trends without unnecessary technical jargon or unsupported causal claims."
+        )
+    )
+    takeaway: str = Field(
+        ...,
+        max_length=150,
+        description=(
+            "A single, high-impact sentence highlighting the primary action or core insight."
+        )
+    )

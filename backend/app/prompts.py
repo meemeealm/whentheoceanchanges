@@ -7,16 +7,53 @@ from typing import Any
 from .schemas import ChartContext
 
 AUDIENCE_INSTRUCTIONS = {
-    "eli5": (
-        "Use very simple language, short sentences, and intuitive explanations. "
-        "Avoid technical jargon unless the chart data truly requires it."
-    ),
-    "general": (
-        "Use clear scientific language, be concise, and focus on the main trend and why it matters."
-    ),
-    "scientist": (
-        "Use precise terminology, quantify the pattern where possible, and mention uncertainty or limits when relevant."
-    ),
+    "eli5": {
+      "style": "very simple and intuitive",
+      "focus": "the easiest-to-understand key takeaway",
+      "language": "everyday language",
+      "avoid": [
+        "technical terminology",
+        "statistical jargon",
+        "unsupported causal explanations"
+      ],
+      "priority": [
+        "what happened",
+        "who or what was most affected",
+        "simple surprising comparisons"
+      ]
+    },
+    "general": {
+      "style": "clear and accessible",
+      "focus": "main finding and important comparisons",
+      "language": "plain but informative",
+      "avoid": [
+        "unnecessary technical jargon",
+        "overly detailed methodology"
+      ],
+      "priority": [
+        "key takeaway",
+        "notable pattern",
+        "important comparison",
+        "context"
+      ]
+    },
+    "scientist": {
+      "style": "precise and analytical",
+      "focus": "quantitative findings and relationships",
+      "language": "scientific terminology where appropriate",
+      "avoid": [
+        "unsupported causal claims",
+        "overinterpretation",
+        "vague statements"
+      ],
+      "priority": [
+        "effect magnitude",
+        "comparisons",
+        "trends",
+        "anomalies",
+        "limitations"
+      ]
+    },
 }
 
 CHART_INSTRUCTIONS = {

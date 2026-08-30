@@ -21,25 +21,32 @@ def get_client() -> genai.Client:
 
 
 def get_model_name() -> str:
-    return os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    return os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
 
 
 def generate_explanation(context: ChartContext, evidence: dict) -> ExplanationResponse:
     prompt = build_prompt_bundle(context, evidence)
     client = get_client()
 
+    schema_dict = ExplanationResponse.model_json_schema()
+    schema_dict.pop("additionalProperties", None)
+
     try:
-        response = client.models.generate_content(
+        # Create a chat session to handle Automatic Function Calling (AFC) cleanly
+        chat = client.chats.create(
             model=get_model_name(),
-            contents=prompt.user_prompt,
             config=types.GenerateContentConfig(
                 system_instruction=prompt.system_instruction,
                 temperature=0.2,
                 response_mime_type="application/json",
-                response_schema=ExplanationResponse,
-                max_output_tokens=512,
+                response_schema=schema_dict,
+                max_output_tokens=2048,
             ),
         )
+
+        # Send message through the chat session instead of models.generate_content
+        response = chat.send_message(prompt.user_prompt)
+
     except HTTPException:
         raise
     except Exception as exc:  # pragma: no cover - surface SDK failures as HTTP
@@ -52,4 +59,13 @@ def generate_explanation(context: ChartContext, evidence: dict) -> ExplanationRe
     try:
         return ExplanationResponse.model_validate_json(text)
     except ValidationError as exc:
-        raise HTTPException(status_code=502, detail="Gemini returned invalid structured output") from exc
+        print("GEMINI RAW RESPONSE:")
+        print(text)
+
+        print("VALIDATION ERROR:")
+        print(exc)
+
+        raise HTTPException(
+            status_code=502,
+            detail="Gemini returned invalid structured output"
+        ) from exc
