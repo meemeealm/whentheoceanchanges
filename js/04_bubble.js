@@ -2,7 +2,7 @@
    04_bubble.js
    ========================================================= */
 
-const DATA_PATH = "data/bubble_data.json";
+const DATA_PATH = "backend/data/bubble_data.json";
 const CHART_ID = "bubble-chart";
 
 

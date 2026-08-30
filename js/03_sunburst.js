@@ -20,7 +20,7 @@
 
 const SUNBURST_CONFIG = {
 
-    dataPath: "data/03_cyclones_data.json",
+    dataPath: "backend/data/03_cyclones_data.json",
 
     chartId: "cyclone-chart",
 

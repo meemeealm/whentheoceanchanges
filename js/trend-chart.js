@@ -1,24 +1,10 @@
 /* =========================================================
-   02_environmenttrends.js
-
-   Data:
-   data/01_environmental_trends.json
-
-   HTML:
-   <div id="trend-chart"></div>
-
-   Requires:
-   Plotly.js
-   ========================================================= */
-
-
-/* =========================================================
    CONFIG
    ========================================================= */
 
 const ENV_CONFIG = {
 
-    dataPath: "data/01_environmental_trends.json",
+    dataPath: "backend/data/01_environmental_trends.json",
 
     chartId: "trend-chart",
 

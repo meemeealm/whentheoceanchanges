@@ -1,0 +1,128 @@
+[
+    {
+        "country":"American Samoa",
+        "cyclone_count":11,
+        "people_affected":4044,
+        "economic_loss":0.0
+    },
+    {
+        "country":"Cook Islands",
+        "cyclone_count":8,
+        "people_affected":5564,
+        "economic_loss":0.0
+    },
+    {
+        "country":"Fiji",
+        "cyclone_count":22,
+        "people_affected":1240734,
+        "economic_loss":69568417.700000003
+    },
+    {
+        "country":"French Polynesia",
+        "cyclone_count":1,
+        "people_affected":0,
+        "economic_loss":30220000.0
+    },
+    {
+        "country":"Guam",
+        "cyclone_count":43,
+        "people_affected":0,
+        "economic_loss":0.0
+    },
+    {
+        "country":"Kiribati",
+        "cyclone_count":0,
+        "people_affected":2987,
+        "economic_loss":299700.0
+    },
+    {
+        "country":"Marshall Islands",
+        "cyclone_count":12,
+        "people_affected":180333,
+        "economic_loss":2235811.8999999999
+    },
+    {
+        "country":"Micronesia (Federated States of)",
+        "cyclone_count":61,
+        "people_affected":44608,
+        "economic_loss":28777200.0
+    },
+    {
+        "country":"Nauru",
+        "cyclone_count":0,
+        "people_affected":6593,
+        "economic_loss":0.0
+    },
+    {
+        "country":"New Caledonia",
+        "cyclone_count":21,
+        "people_affected":7,
+        "economic_loss":20310000.0
+    },
+    {
+        "country":"Niue",
+        "cyclone_count":5,
+        "people_affected":0,
+        "economic_loss":0.0
+    },
+    {
+        "country":"Northern Mariana Islands",
+        "cyclone_count":30,
+        "people_affected":0,
+        "economic_loss":0.0
+    },
+    {
+        "country":"Palau",
+        "cyclone_count":29,
+        "people_affected":37537,
+        "economic_loss":6190263.0
+    },
+    {
+        "country":"Papua New Guinea",
+        "cyclone_count":0,
+        "people_affected":99308,
+        "economic_loss":4384329.5700000003
+    },
+    {
+        "country":"Samoa",
+        "cyclone_count":10,
+        "people_affected":29370,
+        "economic_loss":22048411.0
+    },
+    {
+        "country":"Solomon Islands",
+        "cyclone_count":12,
+        "people_affected":562384,
+        "economic_loss":19674952.0
+    },
+    {
+        "country":"Tokelau",
+        "cyclone_count":3,
+        "people_affected":0,
+        "economic_loss":0.0
+    },
+    {
+        "country":"Tonga",
+        "cyclone_count":23,
+        "people_affected":89891,
+        "economic_loss":35979538.0
+    },
+    {
+        "country":"Tuvalu",
+        "cyclone_count":2,
+        "people_affected":11023,
+        "economic_loss":0.0
+    },
+    {
+        "country":"Vanuatu",
+        "cyclone_count":34,
+        "people_affected":273840,
+        "economic_loss":69568417.700000003
+    },
+    {
+        "country":"Wallis and Futuna",
+        "cyclone_count":28,
+        "people_affected":0,
+        "economic_loss":0.0
+    }
+]
