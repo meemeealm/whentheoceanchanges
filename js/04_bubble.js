@@ -132,14 +132,15 @@ async function createBubbleChart() {
                     xref: "paper",
                     yref: "paper",
                     x: 0,
-                    y: 1.08,
-                    text: "Larger bubbles indicate greater economic loss",
+                    y: 1.12,
+                    text: "Larger bubbles indicate greater economic loss. <br> Note: Impacts can still register a value even when the storm count is zero, because storms in this Chart represent &gt;100 km of the representative location.",
                     showarrow: false,
-                    font: { size: 9, color: "#7A858A" },
+                    font: { size: 9, color: "#596064" },
                     align: "left"
                 }
-            ],
-            margin: { l: 100, r: 40, t: 125, b: 70 },
+
+                ],
+            margin: { l: 100, r: 40, t: 123, b: 70 },
             font: {
                 family: "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
                 color: "#000000"
