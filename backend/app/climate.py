@@ -150,12 +150,24 @@ def _group_trend_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def build_chart_context(context: ChartContext) -> dict[str, Any]:
     if context.chart_id == "trend-chart":
-        return build_trend_context(context)
-    if context.chart_id == "bubble-chart":
-        return build_bubble_context(context)
-    if context.chart_id == "cyclone-chart":
-        return build_cyclone_context(context)
-    raise HTTPException(status_code=400, detail="Unsupported chart_id")
+        evidence = build_trend_context(context)
+    elif context.chart_id == "bubble-chart":
+        evidence = build_bubble_context(context)
+    elif context.chart_id == "cyclone-chart":
+        evidence = build_cyclone_context(context)
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported chart_id")
+
+    print(
+        "build_chart_context() completed:",
+        {
+            "chart_id": evidence.get("chart_id"),
+            "scope": evidence.get("scope"),
+        },
+        flush=True,
+    )
+
+    return evidence
 
 
 def build_trend_context(context: ChartContext) -> dict[str, Any]:
@@ -168,6 +180,9 @@ def build_trend_context(context: ChartContext) -> dict[str, Any]:
     else:
         selected_rows = [row for row in rows if row["country"] == context.selection.region]
         scope = context.selection.region
+
+    print("evidence scope:", scope, flush=True)
+    print("selected country/region used for evidence:", scope, flush=True)
 
     if context.selection.start_year is not None:
         selected_rows = [row for row in selected_rows if row["year"] >= context.selection.start_year]
@@ -247,6 +262,9 @@ def build_bubble_context(context: ChartContext) -> dict[str, Any]:
         selected_rows = rows
         scope = "all countries"
 
+    print("evidence scope:", scope, flush=True)
+    print("selected country/region used for evidence:", scope, flush=True)
+
     if not selected_rows:
         raise HTTPException(status_code=404, detail="No bubble data found for the requested selection")
 
@@ -301,6 +319,9 @@ def build_cyclone_context(context: ChartContext) -> dict[str, Any]:
         selected_rows = rows
         scope = "all countries"
 
+    print("evidence scope:", scope, flush=True)
+    print("selected country/region used for evidence:", scope, flush=True)
+
     if context.selection.start_year is not None:
         selected_rows = [row for row in selected_rows if row["year"] >= context.selection.start_year]
     if context.selection.end_year is not None:
@@ -343,4 +364,3 @@ def build_cyclone_context(context: ChartContext) -> dict[str, Any]:
             ],
         },
     }
-

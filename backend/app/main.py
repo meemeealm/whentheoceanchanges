@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 
 from fastapi import FastAPI, HTTPException, Request
@@ -7,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .climate import build_chart_context
-from .gemini import generate_explanation
+from .groq import generate_explanation
 from .rate_limit import SimpleRateLimiter
 from .schemas import ChartContext, ExplanationResponse
 
@@ -67,5 +68,31 @@ async def health() -> dict[str, str]:
 
 @app.post("/api/explain", response_model=ExplanationResponse)
 async def explain(context: ChartContext) -> ExplanationResponse:
-    evidence = build_chart_context(context)
-    return generate_explanation(context, evidence)
+    print(
+        "Received selection:",
+        context.selection.model_dump(),
+        flush=True,
+    )
+
+    try:
+        evidence = await asyncio.to_thread(build_chart_context, context)
+
+        print(
+            "build_chart_context() completed:",
+            {
+                "chart_id": evidence.get("chart_id"),
+                "scope": evidence.get("scope"),
+            },
+            flush=True,
+        )
+
+        return await asyncio.to_thread(generate_explanation, context, evidence)
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        print(f"Error generating explanation: {exc}", flush=True)
+        raise HTTPException(
+            status_code=502,
+            detail=f"Failed to generate explanation from LLM: {str(exc)}",
+        ) from exc
