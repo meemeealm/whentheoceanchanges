@@ -952,6 +952,47 @@ async function createEnvironmentalChart() {
             config
         );
 
+        const chart =
+            document.getElementById(
+                ENV_CONFIG.chartId
+            );
+
+        if (
+            chart &&
+            typeof chart.on === "function"
+        ) {
+
+            chart.on(
+                "plotly_buttonclicked",
+                (event) => {
+
+                    const selectedRegion =
+                        event?.button?.label;
+
+                    if (!selectedRegion) {
+                        return;
+                    }
+
+                    window.selectedTrendRegion =
+                        selectedRegion;
+
+                    if (selectedRegion === "Pacific Overall") {
+                        window.selectedTrendStartYear =
+                            null;
+                        window.selectedTrendEndYear =
+                            null;
+                    }
+
+                    console.log(
+                        "Selected Plotly country:",
+                        selectedRegion
+                    );
+
+                }
+            );
+
+        }
+
 
         /* -------------------------------------------------
            Responsive resize
