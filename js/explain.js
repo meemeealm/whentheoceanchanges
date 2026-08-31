@@ -301,7 +301,7 @@ function createControls(
         async () => {
 
             const audience =
-                select.value;
+                String(select.value || "general").toLowerCase();
 
 
             let chartContext;

@@ -16,7 +16,6 @@ class BaseSchema(BaseModel):
 
 
 ChartId = Literal["trend-chart", "bubble-chart", "heatmap", "cyclone-chart"]
-Audience = Literal["eli5", "general", "scientist"]
 
 
 class TrendSelection(BaseSchema):
@@ -41,8 +40,27 @@ Selection = Union[TrendSelection, BubbleSelection, HeatmapSelection]
 
 class ChartContext(BaseSchema):
     chart_id: ChartId
-    audience: Audience
+    audience: str = Field(
+        default="general",
+        description="Target audience style: 'eli5', 'scientist', or 'general'",
+    )
     selection: Selection
+
+    @field_validator("audience", mode="before")
+    @classmethod
+    def validate_audience(cls, value):
+        if value is None or value == "":
+            return "general"
+
+        if not isinstance(value, str):
+            raise ValueError("audience must be a string")
+
+        normalized = value.strip().lower()
+
+        if normalized not in {"eli5", "general", "scientist"}:
+            raise ValueError("audience must be one of: eli5, general, scientist")
+
+        return normalized
 
     @model_validator(mode="before")
     @classmethod

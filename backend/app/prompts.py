@@ -9,18 +9,16 @@ from .schemas import ChartContext
 
 AUDIENCE_INSTRUCTIONS = {
     "eli5": (
-        "Use very simple everyday language. "
-        "Explain only the most important pattern. "
-        "Avoid technical and statistical jargon."
+        "Use very simple everyday language with short sentences and simple analogies. "
+        "Explain only the most obvious pattern. Avoid technical or statistical terms."
     ),
     "general": (
-        "Use clear, accessible language. "
-        "Focus on the main finding, important comparisons, and notable patterns."
+        "Use clear, accessible, and balanced language. "
+        "Focus on the main findings, important comparisons, and key patterns."
     ),
     "scientist": (
         "Use precise analytical language. "
-        "Focus on quantitative findings, trends, comparisons, anomalies, and limitations. "
-        "Do not make unsupported causal claims."
+        "Focus on quantitative metrics, anomalies, and data trends using technical terms where appropriate."
     ),
 }
 
@@ -51,44 +49,44 @@ class PromptBundle:
     user_prompt: str
 
 
+def build_system_prompt(audience: str) -> str:
+    style = (audience or "general").strip().lower()
+    audience_instruction = AUDIENCE_INSTRUCTIONS.get(style, AUDIENCE_INSTRUCTIONS["general"])
+
+    return f"""
+You are a climate data analyst writing a brief chart explanation.
+
+Strict Guidelines:
+1. Use ONLY the supplied evidence data. Do NOT invent numbers or facts.
+2. Do NOT make causal claims unless explicit in the evidence.
+3. Explicitly mention the target region/scope.
+4. Keep output concise: "explanation" should be 2-3 short sentences (approx 40 words); "takeaway" should be 1 short sentence (approx 15 words).
+5. Output MUST be valid JSON matching the exact schema below. Do not use Markdown formatting or code blocks.
+
+Audience Style Directives:
+{audience_instruction}
+
+Target JSON Format:
+{{
+  "explanation": "Brief context and pattern analysis.",
+  "takeaway": "Key takeaway sentence."
+}}
+""".strip()
+
+
 def build_prompt_bundle(
     context: ChartContext,
     evidence: dict[str, Any],
 ) -> PromptBundle:
 
-    audience_instruction = AUDIENCE_INSTRUCTIONS[context.audience]
-    chart_instruction = CHART_INSTRUCTIONS[context.chart_id]
+    # 1. Generate base system prompt containing instructions & audience directive
+    system_base = build_system_prompt(getattr(context, "audience", "general"))
+    
+    # 2. Get specific chart focus instruction
+    chart_instruction = CHART_INSTRUCTIONS.get(context.chart_id, CHART_INSTRUCTIONS["heatmap"])
 
-    system_instruction = f"""
-You are a climate data analyst writing a short explanation for a frontend application.
-
-You MUST follow these rules:
-
-1. Use ONLY the supplied evidence.
-2. Do NOT invent numbers or facts.
-3. Do NOT make causal claims unless the evidence explicitly supports causation.
-4. Explicitly mention the selected scope/region when possible.
-5. Focus on the strongest observable pattern.
-6. Keep the explanation concise.
-7. The "explanation" MUST be 300 characters or fewer.
-8. The "takeaway" MUST be 200 characters or fewer.
-9. Return ONLY valid JSON.
-10. Do not use markdown.
-11. Do not add fields other than "explanation" and "takeaway".
-
-Audience:
-{audience_instruction}
-
-Chart:
-{chart_instruction}
-
-The required JSON structure is:
-
-{{
-  "explanation": "short explanation",
-  "takeaway": "short key takeaway"
-}}
-""".strip()
+    # 3. Assemble full system instruction without redundant string duplication
+    system_instruction = f"{system_base}\n\nChart Focus Area:\n{chart_instruction}"
 
     user_prompt = json.dumps(
         {
