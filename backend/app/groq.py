@@ -31,17 +31,51 @@ GROQ_CLIENT = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
 def _clean_model_output(content: str) -> str:
     """Remove accidental Markdown code fences."""
-    return re.sub(
-        r"^```(?:json)?\s*|\s*```$",
+    text = (content or "").strip()
+
+    text = re.sub(
+        r"^```(?:json)?\s*",
         "",
-        content.strip(),
+        text,
         flags=re.IGNORECASE,
-    ).strip()
+    )
+
+    text = re.sub(
+        r"\s*```$",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    return text.strip()
+
+
+def _extract_json_object(content: str) -> str:
+    """
+    Extract a JSON object even if the model accidentally adds
+    text before or after it.
+    """
+
+    clean = _clean_model_output(content)
+
+    if not clean:
+        return ""
+
+    if clean.startswith("{") and clean.endswith("}"):
+        return clean
+
+    start = clean.find("{")
+    end = clean.rfind("}")
+
+    if start != -1 and end != -1 and end > start:
+        return clean[start:end + 1]
+
+    return clean
 
 
 def _get_audience(context: ChartContext) -> str:
     """
-    ChartContext already validates audience to one of:
+    ChartContext validates audience to:
         eli5
         general
         scientist
@@ -52,36 +86,39 @@ def _get_audience(context: ChartContext) -> str:
     if not audience:
         return "general"
 
-    return str(audience).strip().lower()
+    audience = str(audience).strip().lower()
+
+    if audience not in {"eli5", "general", "scientist"}:
+        return "general"
+
+    return audience
 
 
 def _get_audience_instructions(audience: str) -> str:
     """
-    Explicit instructions for each audience.
-
-    These instructions are deliberately very different so the generated
-    explanations do not become identical.
+    Strongly differentiate the three audiences.
     """
 
     if audience == "eli5":
         return """
 AUDIENCE: ELI5
 
-Explain the chart as if you are explaining it to a curious child or
-complete beginner.
+Explain the chart to a complete beginner.
 
-Requirements:
-- Use very simple everyday language.
-- Avoid scientific jargon.
-- If a technical term is necessary, explain it immediately.
-- Focus on WHAT the chart shows.
-- Explain numbers and trends in an intuitive way.
-- Use short, easy-to-understand sentences.
-- Do not assume prior knowledge.
-- Do not discuss methodology unless absolutely necessary.
-- Make the takeaway easy for a beginner to remember.
+Use:
+- Very simple everyday language.
+- Short, clear sentences.
+- Simple explanations of numbers.
+- Intuitive descriptions of trends.
+- No unnecessary technical terminology.
 
-The explanation should answer:
+Avoid:
+- Scientific jargon.
+- Advanced statistics.
+- Methodology details.
+- Assuming prior knowledge.
+
+Focus on:
 "What is happening in this chart, in simple words?"
 """.strip()
 
@@ -89,41 +126,45 @@ The explanation should answer:
         return """
 AUDIENCE: SCIENTIST
 
-Explain the chart for a scientifically literate audience.
+Explain the chart to a scientifically literate audience.
 
-Requirements:
-- Use precise analytical terminology where appropriate.
-- Focus on quantitative patterns, trends, relationships, and comparisons.
-- Mention relevant magnitudes, correlations, temporal patterns, or
-  spatial patterns when those are present in the evidence.
-- Distinguish observed association from causation.
-- Do not oversimplify the findings.
-- Do not invent statistical significance, uncertainty, mechanisms,
-  or causal explanations that are not contained in the evidence.
-- Focus on what can actually be supported by the supplied data.
+Use:
+- Precise analytical terminology.
+- Quantitative comparisons.
+- Numerical patterns.
+- Temporal or spatial patterns.
+- Correlations or relationships when provided.
+- Appropriate statistical language.
 
-The explanation should answer:
+Important:
+- Distinguish association from causation.
+- Do not invent statistical significance.
+- Do not invent uncertainty.
+- Do not invent mechanisms.
+- Do not make claims unsupported by the supplied evidence.
+
+Focus on:
 "What does the evidence quantitatively indicate?"
 """.strip()
 
-    # general
     return """
 AUDIENCE: GENERAL
 
-Explain the chart for an ordinary adult reader who does not need
-specialist technical knowledge.
+Explain the chart to an ordinary adult reader without specialist
+scientific knowledge.
 
-Requirements:
-- Use clear, accessible language.
-- Give enough context to understand the chart.
-- Explain the main trend or relationship.
-- Include important numbers when useful.
-- Avoid unnecessary scientific jargon.
-- Do not make the explanation childish.
-- Do not assume advanced statistical knowledge.
-- Keep the explanation practical and understandable.
+Use:
+- Clear and accessible language.
+- Enough context to understand the chart.
+- The main trend or relationship.
+- Important numbers when useful.
 
-The explanation should answer:
+Avoid:
+- Unnecessary scientific jargon.
+- Childish language.
+- Advanced statistics unless explained.
+
+Focus on:
 "What does this chart show, and why is the pattern important?"
 """.strip()
 
@@ -157,28 +198,20 @@ def _fallback_response(
         start_year = year_range.get("start", "the beginning")
         end_year = year_range.get("end", "the end")
 
-        # -------------------------------------------------------------------
-        # ELI5
-        # -------------------------------------------------------------------
-
         if audience == "eli5":
 
             explanation = (
                 f"In {scope}, the chart shows that sea level had a "
                 f"{sea_level_trend} pattern while temperature had a "
-                f"{temperature_trend} pattern between {start_year} and "
-                f"{end_year}. In simple terms, the chart shows how these "
-                f"two things changed over time."
+                f"{temperature_trend} pattern between {start_year} "
+                f"and {end_year}. In simple terms, the chart shows "
+                f"how these two things changed over time."
             )
 
             takeaway = (
-                "The important idea is that the environment changed over "
-                "the years shown in the chart."
+                "The important idea is that the environmental conditions "
+                "changed during the years shown."
             )
-
-        # -------------------------------------------------------------------
-        # SCIENTIST
-        # -------------------------------------------------------------------
 
         elif audience == "scientist":
 
@@ -186,20 +219,16 @@ def _fallback_response(
                 f"For {scope}, the time series from {start_year} to "
                 f"{end_year} indicates a {sea_level_trend} sea-level "
                 f"trajectory alongside a {temperature_trend} temperature "
-                f"trajectory. The two indicators should be interpreted as "
-                f"separate temporal signals unless the supplied evidence "
-                f"establishes a statistical relationship between them."
+                f"trajectory. These represent separate temporal signals "
+                f"unless the supplied evidence establishes a statistical "
+                f"relationship."
             )
 
             takeaway = (
                 f"The principal temporal signals are a {sea_level_trend} "
                 f"sea-level trend and a {temperature_trend} temperature "
-                f"trend over the observation period."
+                f"trend."
             )
-
-        # -------------------------------------------------------------------
-        # GENERAL
-        # -------------------------------------------------------------------
 
         else:
 
@@ -212,7 +241,7 @@ def _fallback_response(
             )
 
             takeaway = (
-                f"The main takeaway is that {scope} experienced noticeable "
+                f"The main takeaway is that {scope} experienced "
                 f"changes in the environmental indicators shown."
             )
 
@@ -244,10 +273,6 @@ def _fallback_response(
         except (TypeError, ValueError):
             formatted_loss = str(economic_loss)
 
-        # -------------------------------------------------------------------
-        # ELI5
-        # -------------------------------------------------------------------
-
         if audience == "eli5":
 
             explanation = (
@@ -255,18 +280,14 @@ def _fallback_response(
                 f"These events affected about {people_affected} people "
                 f"and the reported economic loss was {formatted_loss}. "
                 f"The correlation value is {correlation}, which describes "
-                f"how closely cyclone numbers and the number of affected "
-                f"people move together."
+                f"how closely cyclone numbers and affected people "
+                f"change together."
             )
 
             takeaway = (
-                "The chart shows that cyclones can have large effects on "
-                "both people and money."
+                "The chart shows that cyclones can have large effects "
+                "on people and money."
             )
-
-        # -------------------------------------------------------------------
-        # SCIENTIST
-        # -------------------------------------------------------------------
 
         elif audience == "scientist":
 
@@ -275,8 +296,8 @@ def _fallback_response(
                 f"{cyclone_count} cyclones, {people_affected} people "
                 f"affected, and {formatted_loss} in reported economic "
                 f"loss. The correlation between cyclone frequency and "
-                f"people affected is {correlation}, providing a quantitative "
-                f"measure of their association in the supplied data."
+                f"people affected is {correlation}, representing the "
+                f"observed association in the supplied data."
             )
 
             takeaway = (
@@ -285,10 +306,6 @@ def _fallback_response(
                 f"and affected population."
             )
 
-        # -------------------------------------------------------------------
-        # GENERAL
-        # -------------------------------------------------------------------
-
         else:
 
             explanation = (
@@ -296,12 +313,11 @@ def _fallback_response(
                 f"{people_affected} people affected, and {formatted_loss} "
                 f"in reported economic loss. The correlation between "
                 f"cyclone counts and people affected is {correlation}, "
-                f"showing how closely these two measures are related "
-                f"in the selected data."
+                f"showing how closely these measures are related."
             )
 
             takeaway = (
-                "The chart highlights the human and economic impact "
+                "The chart highlights the human and economic impacts "
                 "associated with cyclone activity."
             )
 
@@ -320,10 +336,18 @@ def _fallback_response(
         quiet_year = data.get("quiet_year", {})
         top_countries = data.get("top_countries") or []
 
-        peak_year_value = peak_year.get("year", "one year")
-        quiet_year_value = quiet_year.get("year", "another year")
+        peak_year_value = peak_year.get(
+            "year",
+            "one year",
+        )
+
+        quiet_year_value = quiet_year.get(
+            "year",
+            "another year",
+        )
 
         if top_countries:
+
             first_country = top_countries[0]
 
             if isinstance(first_country, dict):
@@ -333,12 +357,9 @@ def _fallback_response(
                 )
             else:
                 top_country = str(first_country)
+
         else:
             top_country = "the leading country"
-
-        # -------------------------------------------------------------------
-        # ELI5
-        # -------------------------------------------------------------------
 
         if audience == "eli5":
 
@@ -346,52 +367,46 @@ def _fallback_response(
                 f"In {scope}, cyclone activity is highest in "
                 f"{peak_year_value} and lowest in {quiet_year_value}. "
                 f"{top_country} is one of the places with high cyclone "
-                f"activity. This means that some years and places have "
+                f"activity. This means some years and places have "
                 f"many more cyclones than others."
             )
 
             takeaway = (
-                "Cyclones do not happen equally often everywhere or "
-                "every year."
+                "Cyclones do not happen equally often everywhere "
+                "or every year."
             )
-
-        # -------------------------------------------------------------------
-        # SCIENTIST
-        # -------------------------------------------------------------------
 
         elif audience == "scientist":
 
             explanation = (
-                f"The {scope} dataset exhibits a temporal maximum in "
-                f"cyclone activity in {peak_year_value} and a minimum in "
-                f"{quiet_year_value}. {top_country} appears among the "
-                f"highest-activity locations, indicating both temporal "
-                f"and spatial concentration within the supplied dataset."
+                f"The {scope} dataset exhibits a temporal maximum "
+                f"in cyclone activity in {peak_year_value} and a "
+                f"minimum in {quiet_year_value}. {top_country} appears "
+                f"among the highest-activity locations, indicating "
+                f"temporal and spatial concentration within the "
+                f"supplied dataset."
             )
 
             takeaway = (
-                f"The distribution shows temporal concentration around "
-                f"{peak_year_value} and spatial concentration among "
-                f"the leading locations."
+                f"The distribution shows temporal concentration "
+                f"around {peak_year_value} and spatial concentration "
+                f"among the leading locations."
             )
-
-        # -------------------------------------------------------------------
-        # GENERAL
-        # -------------------------------------------------------------------
 
         else:
 
             explanation = (
-                f"In {scope}, cyclone activity peaks in {peak_year_value} "
-                f"and is lowest in {quiet_year_value}. {top_country} is "
-                f"among the locations with the most activity. Overall, "
-                f"the chart shows that cyclone activity varies across "
-                f"both years and places."
+                f"In {scope}, cyclone activity peaks in "
+                f"{peak_year_value} and is lowest in "
+                f"{quiet_year_value}. {top_country} is among the "
+                f"locations with the most activity. Overall, the "
+                f"chart shows that cyclone activity varies across "
+                f"years and places."
             )
 
             takeaway = (
-                "Cyclone activity is concentrated in particular places "
-                "and years."
+                "Cyclone activity is concentrated in particular "
+                "places and years."
             )
 
         return ExplanationResponse(
@@ -404,25 +419,30 @@ def _fallback_response(
     # =======================================================================
 
     if audience == "eli5":
+
         return ExplanationResponse(
             explanation=(
                 "The chart shows a pattern in the selected data. "
                 "In simple terms, some values or places change more "
                 "than others."
             ),
-            takeaway="The chart shows that the selected data is not uniform.",
+            takeaway=(
+                "The selected data is not uniform."
+            ),
         )
 
     if audience == "scientist":
+
         return ExplanationResponse(
             explanation=(
-                "The chart indicates a measurable pattern in the supplied "
-                "dataset. Interpretation should be based on the observed "
-                "relationships and trends represented by the chart."
+                "The chart indicates a measurable pattern in the "
+                "supplied dataset. Interpretation should be based "
+                "on the observed relationships and trends represented "
+                "by the chart."
             ),
             takeaway=(
-                "The dataset contains a measurable pattern that warrants "
-                "quantitative interpretation."
+                "The dataset contains an observable pattern that "
+                "can be evaluated quantitatively."
             ),
         )
 
@@ -445,41 +465,48 @@ def _parse_explanation_response(
     content: str,
 ) -> ExplanationResponse:
 
-    clean_text = _clean_model_output(content)
+    clean_text = _extract_json_object(content)
 
     if not clean_text:
         raise ValueError("empty_generation")
 
     try:
+
         payload = json.loads(clean_text)
 
-    except json.JSONDecodeError:
-        return ExplanationResponse(
-            explanation=clean_text,
-            takeaway="",
-        )
+    except json.JSONDecodeError as exc:
+
+        raise ValueError(
+            f"invalid_json_generation: {exc}"
+        ) from exc
 
     if not isinstance(payload, dict):
-        return ExplanationResponse(
-            explanation=clean_text,
-            takeaway="",
+        raise ValueError(
+            "generation_is_not_json_object"
         )
 
-    explanation = payload.get("explanation", "")
-    takeaway = payload.get("takeaway", "")
+    explanation = payload.get("explanation")
+    takeaway = payload.get("takeaway")
 
     if not isinstance(explanation, str):
-        explanation = clean_text
+        raise ValueError(
+            "missing_or_invalid_explanation"
+        )
 
     if not isinstance(takeaway, str):
         takeaway = ""
 
-    if not explanation.strip():
-        raise ValueError("missing_explanation")
+    explanation = explanation.strip()
+    takeaway = takeaway.strip()
+
+    if not explanation:
+        raise ValueError(
+            "empty_explanation"
+        )
 
     return ExplanationResponse(
-        explanation=explanation.strip(),
-        takeaway=takeaway.strip(),
+        explanation=explanation,
+        takeaway=takeaway,
     )
 
 
@@ -493,9 +520,14 @@ def generate_explanation(
 ) -> ExplanationResponse:
 
     audience = _get_audience(context)
-    audience_instructions = _get_audience_instructions(audience)
 
-    system_prompt = build_system_prompt(audience)
+    audience_instructions = _get_audience_instructions(
+        audience
+    )
+
+    system_prompt = build_system_prompt(
+        audience
+    )
 
     chart_prompt = CHART_INSTRUCTIONS.get(
         context.chart_id,
@@ -503,7 +535,7 @@ def generate_explanation(
     )
 
     # -----------------------------------------------------------------------
-    # Explicitly put audience into the model input.
+    # Explicitly include audience in the model input.
     # -----------------------------------------------------------------------
 
     user_payload = {
@@ -519,9 +551,7 @@ def generate_explanation(
     )
 
     # -----------------------------------------------------------------------
-    # Log exactly what audience reached this function.
-    #
-    # This is VERY important for debugging the selector.
+    # Debug log
     # -----------------------------------------------------------------------
 
     print(
@@ -537,7 +567,7 @@ def generate_explanation(
     )
 
     # -----------------------------------------------------------------------
-    # No Groq client
+    # Missing API key
     # -----------------------------------------------------------------------
 
     if GROQ_CLIENT is None:
@@ -548,10 +578,13 @@ def generate_explanation(
             flush=True,
         )
 
-        return _fallback_response(context, evidence)
+        return _fallback_response(
+            context,
+            evidence,
+        )
 
     # -----------------------------------------------------------------------
-    # No model
+    # Missing model
     # -----------------------------------------------------------------------
 
     if not MODEL_NAME:
@@ -562,44 +595,98 @@ def generate_explanation(
             flush=True,
         )
 
-        return _fallback_response(context, evidence)
+        return _fallback_response(
+            context,
+            evidence,
+        )
 
     # -----------------------------------------------------------------------
     # Groq request
+    #
+    # IMPORTANT:
+    # There is intentionally NO response_format parameter.
+    # The previous response_format caused:
+    #
+    # 400 json_validate_failed
+    #
+    # The model is instructed to return JSON and Python parses it.
     # -----------------------------------------------------------------------
 
     try:
 
         response = GROQ_CLIENT.chat.completions.create(
             model=MODEL_NAME,
+
             messages=[
                 {
                     "role": "system",
                     "content": (
                         f"{system_prompt}\n\n"
                         f"{audience_instructions}\n\n"
-                        f"CHART INSTRUCTIONS:\n{chart_prompt}\n\n"
-                        "The audience selection is mandatory. "
-                        "Generate a substantially audience-specific "
-                        "explanation rather than reusing generic wording."
-                    ),
+                        f"CHART INSTRUCTIONS:\n"
+                        f"{chart_prompt}\n\n"
+
+                        "AUDIENCE REQUIREMENT:\n"
+                        f"The selected audience is '{audience}'. "
+                        "You MUST tailor the explanation to this "
+                        "audience. Do not produce the same explanation "
+                        "for different audiences.\n\n"
+
+                        "OUTPUT REQUIREMENT:\n"
+                        "Return ONLY one JSON object.\n"
+                        '{"explanation":"...","takeaway":"..."}\n'
+                        "Both values must be strings.\n"
+                        "The explanation must be one paragraph and no more than 300 characters.\n"
+                        "The takeaway must be no more than 200 characters.\n"
+                        "Do not use Markdown.\n"
+                        "Do not use code fences.\n"
+                        "Do not add any other fields.\n"),
                 },
                 {
                     "role": "user",
                     "content": user_prompt,
                 },
             ],
-            response_format={"type": "json_object"},
-            temperature=0.5,
-            max_tokens=350,
+            reasoning_effort="low",
+            temperature=0.2,
+            max_tokens=1000,
             timeout=REQUEST_TIMEOUT,
         )
 
-        content = response.choices[0].message.content or ""
+        # DEBUG: inspect the actual Groq response
+        # print("FULL GROQ RESPONSE:", response, flush=True)
+        # print("CHOICES:", response.choices, flush=True)
+        # print("MESSAGE:", response.choices[0].message, flush=True)
+        # print(
+        #     "CONTENT:",
+        #     repr(response.choices[0].message.content),
+        #     flush=True,
+        # )
+        # print(
+        #     "FINISH REASON:",
+        #     response.choices[0].finish_reason,
+        #     flush=True,
+        # )
+
+        print(
+            "Groq explanation generated successfully:",
+            {
+                "audience": audience,
+                "chart_id": context.chart_id,
+            },
+            flush=True,
+        )
+
+
 
         # -------------------------------------------------------------------
-        # Empty response
+        # Get model output
         # -------------------------------------------------------------------
+
+        content = (
+            response.choices[0].message.content
+            or ""
+        )
 
         if not content.strip():
 
@@ -609,15 +696,20 @@ def generate_explanation(
                 flush=True,
             )
 
-            return _fallback_response(context, evidence)
+            return _fallback_response(
+                context,
+                evidence,
+            )
 
         # -------------------------------------------------------------------
-        # Parse response
+        # Parse model output
         # -------------------------------------------------------------------
 
         try:
 
-            result = _parse_explanation_response(content)
+            result = _parse_explanation_response(
+                content
+            )
 
             print(
                 "Groq explanation generated successfully:",
@@ -638,10 +730,18 @@ def generate_explanation(
                 flush=True,
             )
 
-            return _fallback_response(context, evidence)
+            print(
+                f"Raw Groq output: {content[:1000]}",
+                flush=True,
+            )
+
+            return _fallback_response(
+                context,
+                evidence,
+            )
 
     # -----------------------------------------------------------------------
-    # Groq error
+    # Groq API error
     # -----------------------------------------------------------------------
 
     except GroqError as exc:
@@ -662,8 +762,8 @@ def generate_explanation(
         ):
 
             print(
-                f"Configured Groq model '{MODEL_NAME}' is unavailable. "
-                "Using audience-aware fallback.",
+                f"Configured Groq model '{MODEL_NAME}' "
+                "is unavailable. Using audience-aware fallback.",
                 flush=True,
             )
 
@@ -674,7 +774,10 @@ def generate_explanation(
                 flush=True,
             )
 
-        return _fallback_response(context, evidence)
+        return _fallback_response(
+            context,
+            evidence,
+        )
 
     # -----------------------------------------------------------------------
     # Unexpected error
@@ -688,4 +791,7 @@ def generate_explanation(
             flush=True,
         )
 
-        return _fallback_response(context, evidence)
+        return _fallback_response(
+            context,
+            evidence,
+        )
