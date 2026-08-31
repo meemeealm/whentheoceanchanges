@@ -8,71 +8,38 @@ from .schemas import ChartContext
 
 
 AUDIENCE_INSTRUCTIONS = {
-    "eli5": {
-        "style": "very simple and intuitive",
-        "focus": "the easiest-to-understand key takeaway",
-        "language": "everyday language",
-        "avoid": [
-            "technical terminology",
-            "statistical jargon",
-            "unsupported causal explanations",
-        ],
-        "priority": [
-            "what happened",
-            "who or what was most affected",
-            "simple surprising comparisons",
-        ],
-    },
-
-    "general": {
-        "style": "clear and accessible",
-        "focus": "main finding and important comparisons",
-        "language": "plain but informative",
-        "avoid": [
-            "unnecessary technical jargon",
-            "overly detailed methodology",
-        ],
-        "priority": [
-            "key takeaway",
-            "notable pattern",
-            "important comparison",
-            "context",
-        ],
-    },
-
-    "scientist": {
-        "style": "precise and analytical",
-        "focus": "quantitative findings and relationships",
-        "language": "scientific terminology where appropriate",
-        "avoid": [
-            "unsupported causal claims",
-            "overinterpretation",
-            "vague statements",
-        ],
-        "priority": [
-            "effect magnitude",
-            "comparisons",
-            "trends",
-            "anomalies",
-            "limitations",
-        ],
-    },
+    "eli5": (
+        "Use very simple everyday language. "
+        "Explain only the most important pattern. "
+        "Avoid technical and statistical jargon."
+    ),
+    "general": (
+        "Use clear, accessible language. "
+        "Focus on the main finding, important comparisons, and notable patterns."
+    ),
+    "scientist": (
+        "Use precise analytical language. "
+        "Focus on quantitative findings, trends, comparisons, anomalies, and limitations. "
+        "Do not make unsupported causal claims."
+    ),
 }
 
 
 CHART_INSTRUCTIONS = {
     "trend-chart": (
-        "Explain the relationship between sea level and sea temperature "
-        "over time for the selected region or Pacific overall."
+        "Explain the relationship between sea level and sea temperature over time "
+        "for the selected region."
     ),
-
     "bubble-chart": (
-        "Explain the scatter/bubble pattern in cyclone counts, "
+        "Explain the relationship and notable patterns among cyclone counts, "
         "people affected, and economic loss for the selected period."
     ),
-
     "heatmap": (
-        "Explain the distribution over years and countries "
+        "Explain the distribution of cyclone activity across countries and years "
+        "for the selected region or all countries."
+    ),
+    "cyclone-chart": (
+        "Explain the distribution of cyclone activity across countries and years "
         "for the selected region or all countries."
     ),
 }
@@ -92,46 +59,35 @@ def build_prompt_bundle(
     audience_instruction = AUDIENCE_INSTRUCTIONS[context.audience]
     chart_instruction = CHART_INSTRUCTIONS[context.chart_id]
 
-    selected_region = evidence.get("scope")
-
     system_instruction = f"""
-You are writing a concise climate-chart explanation for a frontend application.
+You are a climate data analyst writing a short explanation for a frontend application.
 
-Use ONLY the supplied evidence.
-Do not invent numbers, causes, or facts.
+You MUST follow these rules:
 
-SELECTED REGION:
-{selected_region}
+1. Use ONLY the supplied evidence.
+2. Do NOT invent numbers or facts.
+3. Do NOT make causal claims unless the evidence explicitly supports causation.
+4. Explicitly mention the selected scope/region when possible.
+5. Focus on the strongest observable pattern.
+6. Keep the explanation concise.
+7. The "explanation" MUST be 300 characters or fewer.
+8. The "takeaway" MUST be 200 characters or fewer.
+9. Return ONLY valid JSON.
+10. Do not use markdown.
+11. Do not add fields other than "explanation" and "takeaway".
 
-IMPORTANT REGION RULE:
-- The selected region is "{selected_region}".
-- You MUST explicitly mention "{selected_region}" in the explanation.
-- Do NOT replace the selected region with "Pacific Overall".
-- Do NOT describe all countries when a specific region is selected.
-- Use only data belonging to the selected region when the evidence is region-specific.
+Audience:
+{audience_instruction}
 
-WRITING RULES:
-- Lead with a clear key takeaway sentence that captures the primary conclusion.
-- Follow the key takeaway with a thorough, well-developed explanation of the chart findings.
-- Target length: 500 words (up to 2,000 characters).
-- Include specific trends, notable data points, and context provided in the evidence.
-- Describe the primary trend or pattern first, then support it with observed evidence.
-- Prefer absolute changes and observed trends.
-- Do not emphasize percentage changes when the starting value is near zero.
-- Do not make unsupported causal claims.
-- Do not mention information that is not present in the evidence.
-
-AUDIENCE:
-{json.dumps(audience_instruction, ensure_ascii=False)}
-
-CHART FOCUS:
+Chart:
 {chart_instruction}
 
-OUTPUT FORMAT:
-Return only a single plain-text paragraph containing the explanation.
-The first sentence must serve as the key takeaway.
-Do not wrap in JSON.
-Do not include code fences or markdown formatting.
+The required JSON structure is:
+
+{{
+  "explanation": "short explanation",
+  "takeaway": "short key takeaway"
+}}
 """.strip()
 
     user_prompt = json.dumps(
@@ -139,8 +95,8 @@ Do not include code fences or markdown formatting.
             "chart_context": context.model_dump(),
             "evidence": evidence,
         },
-        indent=2,
-        sort_keys=True,
+        ensure_ascii=False,
+        separators=(",", ":"),
     )
 
     return PromptBundle(

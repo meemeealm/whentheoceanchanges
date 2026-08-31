@@ -1,4 +1,4 @@
 node_modules/
-AGENTS.md
 __pycache__
 .venv
+.env

@@ -7,11 +7,11 @@
    - Explain button
    - ChartContext creation
    - Backend API request
-   - Gemini response display
+   - Explanation response display
 
    Charts:
    - trend-chart
-   - -heatmap
+   - heatmap
    - bubble-chart
    ========================================================= */
 
@@ -22,10 +22,6 @@
 
 const EXPLAIN_CONFIG = {
 
-    /*
-     * Local FastAPI backend.
-     * Change this URL when deploying to Cloud Run.
-     */
     apiUrl:
         "http://localhost:8000/api/explain",
 
@@ -42,9 +38,38 @@ const EXPLAIN_CONFIG = {
         "bubble-chart": {
             outputId: "bubble-explanation"
         }
+
     }
 
 };
+
+
+/* =========================================================
+   CURRENT SELECTION STATE
+   ========================================================= */
+
+window.selectedTrendRegion =
+    window.selectedTrendRegion ?? null;
+
+window.selectedTrendStartYear =
+    window.selectedTrendStartYear ?? null;
+
+window.selectedTrendEndYear =
+    window.selectedTrendEndYear ?? null;
+
+
+window.selectedHeatmapRegion =
+    window.selectedHeatmapRegion ?? null;
+
+window.selectedHeatmapYear =
+    window.selectedHeatmapYear ?? null;
+
+
+window.selectedBubbleRegion =
+    window.selectedBubbleRegion ?? null;
+
+window.selectedBubblePeriod =
+    window.selectedBubblePeriod ?? "2010s";
 
 
 /* =========================================================
@@ -221,21 +246,25 @@ function createControls(
      */
 
     const caption =
-    chart.parentNode.querySelector(
-        ".viz-caption-container"
-    );
+        chart.parentNode.querySelector(
+            ".viz-caption-container"
+        );
 
-if (caption) {
-    caption.parentNode.insertBefore(
-        controls,
-        caption.nextSibling
-    );
-} else {
-    chart.parentNode.insertBefore(
-        controls,
-        chart.nextSibling
-    );
-}
+    if (caption) {
+
+        caption.parentNode.insertBefore(
+            controls,
+            caption.nextSibling
+        );
+
+    } else {
+
+        chart.parentNode.insertBefore(
+            controls,
+            chart.nextSibling
+        );
+
+    }
 
 
     /*
@@ -275,11 +304,42 @@ if (caption) {
                 select.value;
 
 
-            const chartContext =
-                createChartContext(
-                    chartId,
-                    audience
+            let chartContext;
+
+            try {
+
+                chartContext =
+                    createChartContext(
+                        chartId,
+                        audience
+                    );
+
+            } catch (error) {
+
+                console.error(
+                    "Could not create chart context:",
+                    error
                 );
+
+                output.innerHTML =
+                    `
+                    <div class="explanation-error">
+                        <strong>Unable to explain this chart.</strong>
+                        <p>
+                            Please select a country or chart value first.
+                        </p>
+                    </div>
+                    `;
+
+                return;
+
+            }
+
+
+            console.log(
+                "ChartContext created:",
+                chartContext
+            );
 
 
             await explainChart(
@@ -295,6 +355,69 @@ if (caption) {
 
 
 /* =========================================================
+   GET ACTIVE PLOTLY DROPDOWN LABEL
+   ========================================================= */
+
+function getActivePlotlyDropdownLabels(
+    targetChartId
+) {
+
+    const targetChart =
+        document.getElementById(
+            targetChartId
+        );
+
+    const menus =
+        targetChart?._fullLayout?.updatemenus;
+
+    if (
+        !Array.isArray(menus) ||
+        !menus.length
+    ) {
+        return [];
+    }
+
+
+    const labels = [];
+
+
+    for (
+        const menu of menus
+    ) {
+
+        if (
+            !menu ||
+            !Array.isArray(menu.buttons) ||
+            typeof menu.active !== "number"
+        ) {
+            continue;
+        }
+
+
+        const activeButton =
+            menu.buttons[menu.active];
+
+
+        if (
+            activeButton &&
+            activeButton.label
+        ) {
+
+            labels.push(
+                activeButton.label
+            );
+
+        }
+
+    }
+
+
+    return labels;
+
+}
+
+
+/* =========================================================
    CREATE CHART CONTEXT
    ========================================================= */
 
@@ -303,69 +426,48 @@ function createChartContext(
     audience
 ) {
 
-    function getActivePlotlyDropdownLabel(
-        targetChartId
-    ) {
 
-        const targetChart =
-            document.getElementById(
-                targetChartId
-            );
-
-        const menus =
-            targetChart?._fullLayout?.updatemenus;
-
-        if (
-            !Array.isArray(menus) ||
-            !menus.length
-        ) {
-            return null;
-        }
-
-        for (
-            const menu of menus
-        ) {
-
-            if (
-                !menu ||
-                !Array.isArray(menu.buttons) ||
-                typeof menu.active !== "number"
-            ) {
-                continue;
-            }
-
-            const activeButton =
-                menu.buttons[menu.active];
-
-            if (activeButton?.label) {
-                return activeButton.label;
-            }
-        }
-
-        return null;
-
-    }
-
-    /*
-     * TREND CHART
-     */
+    /* =====================================================
+       TREND CHART
+       ===================================================== */
 
     if (chartId === "trend-chart") {
 
-        const selectedRegion =
-            getActivePlotlyDropdownLabel(
+        const dropdownLabels =
+            getActivePlotlyDropdownLabels(
                 chartId
-            ) ||
+            );
+
+
+        const selectedRegion =
             window.selectedTrendRegion ||
+            dropdownLabels[0] ||
             "Pacific Overall";
+
+
+        const startYear =
+            window.selectedTrendStartYear ??
+            null;
+
+
+        const endYear =
+            window.selectedTrendEndYear ??
+            null;
+
 
         window.selectedTrendRegion =
             selectedRegion;
 
+
         console.log(
-            "Selected Plotly country:",
-            selectedRegion
+            "Trend selection:",
+            {
+                region: selectedRegion,
+                start_year: startYear,
+                end_year: endYear
+            }
         );
+
 
         return {
 
@@ -376,16 +478,16 @@ function createChartContext(
                 audience,
 
             selection: {
+
                 region:
                     selectedRegion,
 
                 start_year:
-                    window.selectedTrendStartYear ??
-                    null,
+                    startYear,
 
                 end_year:
-                    window.selectedTrendEndYear ??
-                    null
+                    endYear
+
             }
 
         };
@@ -393,11 +495,30 @@ function createChartContext(
     }
 
 
-    /*
-     * BUBBLE CHART
-     */
+    /* =====================================================
+       BUBBLE CHART
+       ===================================================== */
 
     if (chartId === "bubble-chart") {
+
+        const selectedRegion =
+            window.selectedBubbleRegion ??
+            null;
+
+
+        const selectedPeriod =
+            window.selectedBubblePeriod ||
+            "2010s";
+
+
+        console.log(
+            "Bubble selection:",
+            {
+                region: selectedRegion,
+                period: selectedPeriod
+            }
+        );
+
 
         return {
 
@@ -409,18 +530,12 @@ function createChartContext(
 
             selection: {
 
-                /*
-                 * Your current bubble chart
-                 * represents the 2010s.
-                 */
-
                 period:
-                    window.selectedBubblePeriod ||
-                    "2010s",
+                    selectedPeriod,
 
                 region:
-                    window.selectedBubbleRegion ??
-                    null
+                    selectedRegion
+
             }
 
         };
@@ -428,11 +543,47 @@ function createChartContext(
     }
 
 
-    /*
-     * HEATMAP CHART
-     */
+    /* =====================================================
+       HEATMAP
+       ===================================================== */
 
     if (chartId === "heatmap") {
+
+        const selectedRegion =
+            window.selectedHeatmapRegion ??
+            null;
+
+
+        const selectedYear =
+            window.selectedHeatmapYear != null
+                ? Number(window.selectedHeatmapYear)
+                : null;
+
+
+        console.log(
+            "Heatmap selection:",
+            {
+                region: selectedRegion,
+                year: selectedYear
+            }
+        );
+
+
+        /*
+         * A heatmap explanation requires
+         * a selected country.
+         *
+         * Do not silently send null.
+         */
+
+        if (!selectedRegion) {
+
+            throw new Error(
+                "No heatmap country selected"
+            );
+
+        }
+
 
         return {
 
@@ -445,16 +596,14 @@ function createChartContext(
             selection: {
 
                 region:
-                    window.selectedCycloneRegion ??
-                    null,
+                    selectedRegion,
 
                 start_year:
-                    window.selectedCycloneStartYear ??
-                    null,
+                    selectedYear,
 
                 end_year:
-                    window.selectedCycloneEndYear ??
-                    null
+                    selectedYear
+
             }
 
         };
@@ -467,6 +616,148 @@ function createChartContext(
     );
 
 }
+
+
+/* =========================================================
+   LISTEN FOR TREND SELECTION
+   ========================================================= */
+
+document.addEventListener(
+    "trendRegionSelected",
+    (event) => {
+
+        const region =
+            event?.detail?.region ??
+            event?.detail?.country;
+
+
+        if (!region) {
+            return;
+        }
+
+
+        window.selectedTrendRegion =
+            region;
+
+
+        if (
+            event?.detail?.start_year != null
+        ) {
+
+            window.selectedTrendStartYear =
+                Number(
+                    event.detail.start_year
+                );
+
+        }
+
+
+        if (
+            event?.detail?.end_year != null
+        ) {
+
+            window.selectedTrendEndYear =
+                Number(
+                    event.detail.end_year
+                );
+
+        }
+
+
+        console.log(
+            "Selected trend region:",
+            window.selectedTrendRegion
+        );
+
+    }
+);
+
+
+/* =========================================================
+   LISTEN FOR HEATMAP SELECTION
+   ========================================================= */
+
+document.addEventListener(
+    "countrySelected",
+    (event) => {
+
+        const country =
+            event?.detail?.country;
+
+
+        const year =
+            event?.detail?.year;
+
+
+        if (!country) {
+            return;
+        }
+
+
+        window.selectedHeatmapRegion =
+            country;
+
+
+        window.selectedHeatmapYear =
+            year != null
+                ? Number(year)
+                : null;
+
+
+        console.log(
+            "Selected heatmap region:",
+            window.selectedHeatmapRegion
+        );
+
+
+        console.log(
+            "Selected heatmap year:",
+            window.selectedHeatmapYear
+        );
+
+    }
+);
+
+
+/* =========================================================
+   LISTEN FOR BUBBLE SELECTION
+   ========================================================= */
+
+document.addEventListener(
+    "bubbleRegionSelected",
+    (event) => {
+
+        const region =
+            event?.detail?.region ??
+            event?.detail?.country;
+
+
+        if (!region) {
+            return;
+        }
+
+
+        window.selectedBubbleRegion =
+            region;
+
+
+        if (
+            event?.detail?.period
+        ) {
+
+            window.selectedBubblePeriod =
+                event.detail.period;
+
+        }
+
+
+        console.log(
+            "Selected bubble region:",
+            window.selectedBubbleRegion
+        );
+
+    }
+);
 
 
 /* =========================================================
@@ -486,8 +777,10 @@ async function explainChart(
     button.disabled =
         true;
 
+
     const originalText =
         button.textContent;
+
 
     button.textContent =
         "Explaining...";
@@ -504,15 +797,17 @@ async function explainChart(
     try {
 
         console.log(
-            "Country sent to backend:",
+            "Country/region sent to backend:",
             chartContext?.selection?.region ??
                 null
         );
+
 
         console.log(
             "Complete request payload:",
             chartContext
         );
+
 
         /*
          * Send ChartContext to FastAPI.
@@ -551,10 +846,12 @@ async function explainChart(
             let message =
                 `Request failed (${response.status})`;
 
+
             try {
 
                 const error =
                     await response.json();
+
 
                 if (error.detail) {
 
@@ -568,6 +865,7 @@ async function explainChart(
                  * Keep default message.
                  */
             }
+
 
             throw new Error(
                 message
@@ -584,8 +882,14 @@ async function explainChart(
             await response.json();
 
 
+        console.log(
+            "Explanation response:",
+            result
+        );
+
+
         /*
-         * Display Gemini explanation.
+         * Display explanation.
          */
 
         displayExplanation(
@@ -605,10 +909,18 @@ async function explainChart(
         output.innerHTML =
             `
             <div class="explanation-error">
-                <strong>Unable to generate explanation.</strong>
+
+                <strong>
+                    Unable to generate explanation.
+                </strong>
+
                 <p>
-                    Please try again.
+                    ${escapeHtml(
+                        error?.message ||
+                        "Please try again."
+                    )}
                 </p>
+
             </div>
             `;
 
@@ -616,6 +928,7 @@ async function explainChart(
 
         button.disabled =
             false;
+
 
         button.textContent =
             originalText;
@@ -635,13 +948,19 @@ function displayExplanation(
 ) {
 
     const explanation =
-        result?.explanation || "";
+        result?.explanation ||
+        "";
+
 
     const takeaway =
-        result?.takeaway || "";
+        result?.takeaway ||
+        "";
 
 
-    if (!explanation && !takeaway) {
+    if (
+        !explanation &&
+        !takeaway
+    ) {
 
         output.innerHTML =
             `
@@ -651,6 +970,7 @@ function displayExplanation(
             `;
 
         return;
+
     }
 
 
@@ -663,24 +983,31 @@ function displayExplanation(
                     ? `
                     <div class="explanation-main">
                         <p>
-                            ${escapeHtml(explanation)}
+                            ${escapeHtml(
+                                explanation
+                            )}
                         </p>
                     </div>
                     `
                     : ""
             }
 
+
             ${
                 takeaway
                     ? `
                     <div class="explanation-takeaway">
+
                         <strong>
                             Key takeaway
                         </strong>
 
                         <p>
-                            ${escapeHtml(takeaway)}
+                            ${escapeHtml(
+                                takeaway
+                            )}
                         </p>
+
                     </div>
                     `
                     : ""
@@ -728,35 +1055,6 @@ function escapeHtml(
         );
 
 }
-
-/* =========================================================
-   LISTEN FOR CYCLONE COUNTRY SELECTION
-   ========================================================= */
-
-document.addEventListener(
-    "countrySelected",
-    (event) => {
-
-        const country =
-            event?.detail?.country;
-
-        if (!country) {
-            return;
-        }
-
-        /*
-         * Save the selected country so that
-         * createChartContext() sends it to the backend.
-         */
-        window.selectedCycloneRegion =
-            country;
-
-        console.log(
-            "Selected cyclone country:",
-            window.selectedCycloneRegion
-        );
-    }
-);
 
 
 /* =========================================================

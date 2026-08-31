@@ -29,11 +29,19 @@ def _parse_origins(value: str | None) -> list[str]:
     ]
 
 
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=_parse_origins(os.getenv("CORS_ORIGINS")),
+#     allow_credentials=False,
+#     allow_methods=["GET", "POST", "OPTIONS"],
+#     allow_headers=["*"],
+# )
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_parse_origins(os.getenv("CORS_ORIGINS")),
+    allow_origins=["*"],
     allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
