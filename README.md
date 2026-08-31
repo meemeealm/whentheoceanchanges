@@ -27,7 +27,7 @@ Submission for Pacific DataViz Challenge
                                  │
                                  ▼
                     ┌─────────────────────────┐
-                    │       Gemini API        │
+                    │          Groq           │
                     │                         │
                     │ ELI5 / General /        │
                     │ Scientist explanation   │
