@@ -11,7 +11,7 @@
 
    Charts:
    - trend-chart
-   - cyclone-chart
+   - -heatmap
    - bubble-chart
    ========================================================= */
 
@@ -35,8 +35,8 @@ const EXPLAIN_CONFIG = {
             outputId: "trend-explanation"
         },
 
-        "cyclone-chart": {
-            outputId: "cyclone-explanation"
+        "heatmap": {
+            outputId: "heatmap-explanation"
         },
 
         "bubble-chart": {
@@ -220,10 +220,22 @@ function createControls(
      * Insert controls directly below chart.
      */
 
+    const caption =
+    chart.parentNode.querySelector(
+        ".viz-caption-container"
+    );
+
+if (caption) {
+    caption.parentNode.insertBefore(
+        controls,
+        caption.nextSibling
+    );
+} else {
     chart.parentNode.insertBefore(
         controls,
         chart.nextSibling
     );
+}
 
 
     /*
@@ -291,11 +303,69 @@ function createChartContext(
     audience
 ) {
 
+    function getActivePlotlyDropdownLabel(
+        targetChartId
+    ) {
+
+        const targetChart =
+            document.getElementById(
+                targetChartId
+            );
+
+        const menus =
+            targetChart?._fullLayout?.updatemenus;
+
+        if (
+            !Array.isArray(menus) ||
+            !menus.length
+        ) {
+            return null;
+        }
+
+        for (
+            const menu of menus
+        ) {
+
+            if (
+                !menu ||
+                !Array.isArray(menu.buttons) ||
+                typeof menu.active !== "number"
+            ) {
+                continue;
+            }
+
+            const activeButton =
+                menu.buttons[menu.active];
+
+            if (activeButton?.label) {
+                return activeButton.label;
+            }
+        }
+
+        return null;
+
+    }
+
     /*
      * TREND CHART
      */
 
     if (chartId === "trend-chart") {
+
+        const selectedRegion =
+            getActivePlotlyDropdownLabel(
+                chartId
+            ) ||
+            window.selectedTrendRegion ||
+            "Pacific Overall";
+
+        window.selectedTrendRegion =
+            selectedRegion;
+
+        console.log(
+            "Selected Plotly country:",
+            selectedRegion
+        );
 
         return {
 
@@ -306,18 +376,8 @@ function createChartContext(
                 audience,
 
             selection: {
-
-                /*
-                 * Your trend chart currently uses
-                 * "Pacific Overall" as the default.
-                 *
-                 * The country dropdown can later
-                 * update this value.
-                 */
-
                 region:
-                    window.selectedTrendRegion ||
-                    "Pacific Overall",
+                    selectedRegion,
 
                 start_year:
                     window.selectedTrendStartYear ??
@@ -369,15 +429,15 @@ function createChartContext(
 
 
     /*
-     * CYCLONE CHART
+     * HEATMAP CHART
      */
 
-    if (chartId === "cyclone-chart") {
+    if (chartId === "heatmap") {
 
         return {
 
             chart_id:
-                "cyclone-chart",
+                "heatmap",
 
             audience:
                 audience,
@@ -442,6 +502,17 @@ async function explainChart(
 
 
     try {
+
+        console.log(
+            "Country sent to backend:",
+            chartContext?.selection?.region ??
+                null
+        );
+
+        console.log(
+            "Complete request payload:",
+            chartContext
+        );
 
         /*
          * Send ChartContext to FastAPI.
@@ -657,6 +728,35 @@ function escapeHtml(
         );
 
 }
+
+/* =========================================================
+   LISTEN FOR CYCLONE COUNTRY SELECTION
+   ========================================================= */
+
+document.addEventListener(
+    "countrySelected",
+    (event) => {
+
+        const country =
+            event?.detail?.country;
+
+        if (!country) {
+            return;
+        }
+
+        /*
+         * Save the selected country so that
+         * createChartContext() sends it to the backend.
+         */
+        window.selectedCycloneRegion =
+            country;
+
+        console.log(
+            "Selected cyclone country:",
+            window.selectedCycloneRegion
+        );
+    }
+);
 
 
 /* =========================================================

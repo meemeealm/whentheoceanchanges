@@ -4,7 +4,7 @@ from typing import Literal, Union
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-ChartId = Literal["trend-chart", "bubble-chart", "cyclone-chart"]
+ChartId = Literal["trend-chart", "bubble-chart", "heatmap"]
 Audience = Literal["eli5", "general", "scientist"]
 
 
@@ -54,7 +54,7 @@ class ChartContext(BaseModel):
             model = TrendSelection
         elif chart_id == "bubble-chart":
             model = BubbleSelection
-        elif chart_id == "cyclone-chart":
+        elif chart_id == "heatmap":
             model = CycloneSelection
         else:
             return data
@@ -71,8 +71,8 @@ class ChartContext(BaseModel):
             raise ValueError("trend-chart requires trend selection fields")
         if self.chart_id == "bubble-chart" and not isinstance(self.selection, BubbleSelection):
             raise ValueError("bubble-chart requires bubble selection fields")
-        if self.chart_id == "cyclone-chart" and not isinstance(self.selection, CycloneSelection):
-            raise ValueError("cyclone-chart requires cyclone selection fields")
+        if self.chart_id == "heatmap" and not isinstance(self.selection, CycloneSelection):
+            raise ValueError("heatmap requires cyclone selection fields")
 
         if isinstance(self.selection, TrendSelection):
             if self.selection.start_year is not None and self.selection.end_year is not None:
@@ -87,21 +87,11 @@ class ChartContext(BaseModel):
         return self
 
 
-from pydantic import BaseModel, Field
-
 class ExplanationResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     explanation: str = Field(
         ...,
-        max_length=300,
-        description=(
-            "A concise narrative tailored to the requested audience. "
-            "Focus strictly on key findings/trends without unnecessary technical jargon or unsupported causal claims."
-        )
-    )
-    takeaway: str = Field(
-        ...,
-        max_length=150,
-        description=(
-            "A single, high-impact sentence highlighting the primary action or core insight."
-        )
+        max_length=1200,
+        description="Single paragraph explanation of the chart findings."
     )
