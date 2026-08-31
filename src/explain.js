@@ -23,7 +23,7 @@
 const EXPLAIN_CONFIG = {
 
     apiUrl:
-        "http://localhost:8000/api/explain",
+        "https://when-the-ocean-changes-backend.vercel.app/api/explain",
 
     charts: {
 
